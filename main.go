@@ -60,7 +60,7 @@ func main() {
 			// If we receive a file modified or file created event, kick off running the command
 			event, ok := <-watcher.Events
 			interested := false
-			if ok && (event.Op & fsnotify.Write == fsnotify.Write || event.Op & fsnotify.Create == fsnotify.Create) {
+			if ok && (event.Op&fsnotify.Write == fsnotify.Write || event.Op&fsnotify.Create == fsnotify.Create) {
 				interested = true
 			}
 
