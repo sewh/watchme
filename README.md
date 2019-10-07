@@ -1,7 +1,7 @@
 watchme
 =======
 
-watchme is a simple replacement for the [acme watch command](https://github.com/9fans/go/tree/master/acme/Watch) that is cross-platform (thanks to fsnotify), a bit more simple in implementation, and probably much more naive.
+watchme is a simple replacement for the [acme watch command](https://github.com/9fans/go/tree/master/acme/Watch) that is cross-platform (thanks to fsnotify), a bit simpler in implementation, and probably much more naive.
 
 This is heavily based on the original watch source code, which can be found at the link above.
 
