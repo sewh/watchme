@@ -55,7 +55,7 @@ func main() {
 
 	paths := make([]string, 0)
 
-	MainLoop:
+MainLoop:
 	for {
 		// Remove then add entries to watch
 		for _, path := range paths {
@@ -80,12 +80,12 @@ func main() {
 			// If we receive a file modified or file created event, kick off running the command
 			interested := false
 			select {
-			case event, ok := <- watcher.Events:
+			case event, ok := <-watcher.Events:
 				if ok && (event.Op&fsnotify.Write == fsnotify.Write || event.Op&fsnotify.Create == fsnotify.Create) {
 					interested = true
 				}
 				break
-			case <- time.After(1 * time.Second):
+			case <-time.After(1 * time.Second):
 				continue MainLoop
 			}
 
