@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
+	"time"
 
 	"9fans.net/go/acme"
 	"github.com/fsnotify/fsnotify"
@@ -18,8 +20,8 @@ func main() {
 	// Just pull out all arguments
 	flag.Parse()
 	args = flag.Args()
-	if len(args) == 0 {
-		fmt.Println("watchme cmd args...")
+	if len(args) < 2 {
+		fmt.Println("watchme glob cmd args...")
 		os.Exit(0)
 	}
 
@@ -46,22 +48,45 @@ func main() {
 		fmt.Println("Could not open file system watcher: " + err.Error())
 		os.Exit(1)
 	}
-	watcher.Add(pwd)
 
 	// Start the main execution loop
 	var prevCmd *exec.Cmd
 	firstGo := true
+
+	paths := make([]string, 0)
+
+	MainLoop:
 	for {
+		// Remove then add entries to watch
+		for _, path := range paths {
+			watcher.Remove(path)
+		}
+
+		// Regenerate entries we are interested in
+		paths, err := filepath.Glob(args[0])
+		if err == filepath.ErrBadPattern {
+			fmt.Println("Bad glob!")
+			os.Exit(1)
+		}
+		for _, path := range paths {
+			watcher.Add(path)
+		}
+
 		// Wait until we receive an event
 		if firstGo {
 			// We don't want to block waiting for file system events when running the first command
 			firstGo = false
 		} else {
 			// If we receive a file modified or file created event, kick off running the command
-			event, ok := <-watcher.Events
 			interested := false
-			if ok && (event.Op&fsnotify.Write == fsnotify.Write || event.Op&fsnotify.Create == fsnotify.Create) {
-				interested = true
+			select {
+			case event, ok := <- watcher.Events:
+				if ok && (event.Op&fsnotify.Write == fsnotify.Write || event.Op&fsnotify.Create == fsnotify.Create) {
+					interested = true
+				}
+				break
+			case <- time.After(1 * time.Second):
+				continue MainLoop
 			}
 
 			if !interested {
@@ -76,7 +101,7 @@ func main() {
 		prevCmd = nil
 
 		// Fire off  the command and redirect output to our pipe
-		cmd := exec.Command(args[0], args[1:]...)
+		cmd := exec.Command(args[1], args[2:]...)
 		r, w, err := os.Pipe()
 		if err != nil {
 			fmt.Println("Could not open OS pipe to connect to process: " + err.Error())
@@ -85,13 +110,13 @@ func main() {
 		win.Addr(",")
 		win.Write("data", nil)
 		win.Ctl("clean")
-		win.Fprintf("body", "$ %s\n", strings.Join(args, " "))
+		win.Fprintf("body", "$ %s\n", strings.Join(args[1:], " "))
 		cmd.Stdout = w
 		cmd.Stderr = w
 		if err := cmd.Start(); err != nil {
 			r.Close()
 			w.Close()
-			win.Fprintf("body", "%s: %s\n", strings.Join(args, " "), err.Error())
+			win.Fprintf("body", "%s: %s\n", strings.Join(args[1:], " "), err.Error())
 			continue
 		}
 		prevCmd = cmd

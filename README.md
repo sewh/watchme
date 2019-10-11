@@ -1,9 +1,9 @@
 watchme
 =======
 
-watchme is a simple replacement for the [acme watch command](https://github.com/9fans/go/tree/master/acme/Watch) that is cross-platform (thanks to fsnotify), a bit simpler in implementation, and probably much more naive.
+watchme is a tool to run a shell command inside of an [acme](https://en.wikipedia.org/wiki/Acme_(text_editor)) window whenever a file has been modified.
 
-This is heavily based on the original watch source code, which can be found at the link above.
+It is heavily inspired (and based upon) the original [acme watch command](https://github.com/9fans/go/tree/master/acme/Watch). Unlike the original watch command, watchme is cross-platform and forces the user to choose what files they are interested in monitoring with a [glob](https://en.wikipedia.org/wiki/Glob_(programming)).
 
 ## Installation
 
@@ -16,6 +16,6 @@ go install github.com/sewhs/watchme
 
 ## Usage
 
-With acme running: `watchme command [arguments]`
+With acme running: `watchme glob command [arguments]` e.g. `watchme '*.go' go vet` to run the `go vet` tool whenever a '.go' file changes.
 
-This will watch the current working directory for any changes and re-run `command [arguments]` in an acme window when a file gets modified or created.
+watchme will automatically refresh the list of globbed files, so you don't need to re-run watchme each time you add a new file.
